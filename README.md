@@ -33,6 +33,17 @@ Kick ServiceNow's ass to wake up PDI 24/7.
 |  A_USERNAME  	|   Your Dev account (email)   	|                  my@email.com                 	|
 |  A_PASSWORD  	|  Your Dev account (password) 	|                     P@ssword123                    	|
 
+**Example**
+
+```
+SILENT=True
+INSTANCE_URL=https://<pdi>.service-now.com
+J_USERNAME=admin
+J_PASSWORD=P@ssword123
+A_USERNAME=my@email.com
+A_PASSWORD=P@ssword123
+```
+
 ## Schedules
 
 To make your life easier, just create a scheduled task run at weekend:
