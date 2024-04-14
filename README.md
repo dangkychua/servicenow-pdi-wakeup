@@ -33,6 +33,27 @@ Kick ServiceNow's ass to wake up PDI 24/7.
 |  A_USERNAME  	|   Your Dev account (email)   	|                  my@email.com                 	|
 |  A_PASSWORD  	|  Your Dev account (password) 	|                     P@ssword123                    	|
 
+## Schedules
+
+To make your life easier, just create a scheduled task run at weekend:
+
+1. Create batch script file *auto-wakeup.bat* 
+    ```
+    @echo off
+    call py /<path to this repo>/j.py
+    echo.
+    pause
+    ```
+2. Open *Task Scheduler*
+
+3. Create basic task as below (example):
+
+    - **Name**: Auto-wakeup
+    - **Trigger**: Weekly
+    - **Weekly**: Start 12:00:00 AM - Recur every 1 weeks on Sunday
+    - **Action**: Start a program
+    - **Program/script**: Select batch script file above *auto-wakeup.bat*
+
 ### Donation
 
 If you love my apps, give me a buck bros!
