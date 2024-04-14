@@ -3,7 +3,9 @@
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/Django.svg) ![MIT](https://img.shields.io/badge/license-MIT-blue)
 
 You're tired of having to wake up PDI every week. If yes, this is for you.
-Kick ServiceNow's ass to wake up PDI 24/7. 
+Kick ServiceNow's ass to wake up PDI 24/7.
+
+![DEMO](https://github.com/dangkychua/jcode-crafter/blob/master/docs/assets/assets/images/servicenow-pdi-wakeup.gif)
 
 ## Requirements
 
