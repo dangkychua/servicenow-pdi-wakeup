@@ -10,6 +10,7 @@ Kick ServiceNow's ass to wake up PDI 24/7.
 - python (3.10+)
 - chrome browser (latest version)
 - window 10
+- Servicenow (from Vancouver)
 
 ## Install Requirements
     pip install -r requirements.txt
@@ -46,7 +47,7 @@ A_PASSWORD=P@ssword123
 
 ## Schedules
 
-To make your life easier, just create a scheduled task run at weekend:
+To make your life easier, just create a scheduled task run at the weekend:
 
 1. Create batch script file *auto-wakeup.bat* 
     ```
