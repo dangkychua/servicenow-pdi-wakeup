@@ -26,7 +26,7 @@ Kick ServiceNow's ass to wake up PDI 24/7.
 
 |     Name     	|          Description         	|                       Example                      	|
 |:------------:	|:----------------------------:	|:--------------------------------------------------:	|
-|    SILENT    	|    Run app as silent mode    	| True: Run as silent mode False: Run as normal mode 	|
+|    SILENT    	|    Run app as silent mode    	| True: Run as silent mode <br/>False: Run as normal mode 	|
 | INSTANCE_URL 	|       PDI Instance URL       	|         https://your-PDI.service-now.com         	|
 |  J_USERNAME  	| PDI admin account (username) 	|                        admin                       	|
 |  J_PASSWORD  	| PDI admin account (password) 	|                     P@ssword123                    	|
