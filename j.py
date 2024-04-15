@@ -12,8 +12,8 @@ from selenium.common.exceptions import *
 
 # constant
 timer = 2
-config = os.path.join(os.getcwd(), ".env")
-# config = 'dist/.env'
+# config = os.path.join(os.getcwd(), ".env")
+config = 'dist/.env'
 if os.path.isfile(config):
     load_dotenv(config)
 else:
@@ -26,7 +26,7 @@ else:
 
 CALU = os.getenv("CALU") == "True"
 SILENT = os.getenv("SILENT") == "True"
-key = os.getenv("K",Fernet.generate_key().decode())
+key = os.getenv("K", Fernet.generate_key().decode())
 fernet = Fernet(key.encode())
 DEBUG = False
 INSTANCE_URL = os.getenv("INSTANCE_URL")
@@ -61,11 +61,6 @@ else:
     chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options=chrome_options)
 wait = WebDriverWait(driver, 60)
-if not DEBUG:
-    driver.get(INSTANCE_URL)
-if DEBUG:
-    driver.close()
-
 
 def login():
     print("--------- START LOGIN PROCESS")
@@ -142,7 +137,8 @@ def action():
     wait.until(EC.url_to_be(
         INSTANCE_URL+"/now/nav/ui/classic/params/target/sys.scripts.do"))
     # time.sleep(timer)
-    ele = driver.execute_script("return document.querySelector('body > pre').innerText;")
+    ele = driver.execute_script(
+        "return document.querySelector('body > pre').innerText;")
     log(ele)
     log("Execute script successful!")
 
@@ -155,12 +151,12 @@ def log(msg):
 
 def wakeup():
     print("--------- START WAKEUP PROCESS")
-    
+
     # waiting redirect to dev page
-    wait.until(EC.url_to_be(
-        "https://developer.servicenow.com/dev.do#!/home?wu=true"))
     log("Navigate to DEV page")
     log("Waiting DEV page loaded.....")
+    wait.until(EC.url_to_be(
+        "https://developer.servicenow.com/dev.do#!/home?wu=true"))
     ele = wait.until(EC.visibility_of(driver.execute_script(
         "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > header > dps-navigation-header').shadowRoot.querySelector('header > div > div.dps-navigation-header-utility > ul > li:nth-child(2) > dps-login').shadowRoot.querySelector('div > dps-button').shadowRoot.querySelector('button')")))
     log("DEV page loaded!")
@@ -208,6 +204,7 @@ def wakeup():
 
 def main():
     try:
+        driver.get(INSTANCE_URL)
         if driver.title == "Instance Hibernating page":
             log("Instance has been hibernated!")
             wakeup()
