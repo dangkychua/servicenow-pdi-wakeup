@@ -25,8 +25,8 @@ else:
 
 CALU = os.getenv("CALU") == "True"
 SILENT = os.getenv("SILENT") == "True"
-key = os.getenv("K").encode()
-fernet = Fernet(key)
+key = os.getenv("K",Fernet.generate_key().decode())
+fernet = Fernet(key.encode())
 DEBUG = False
 INSTANCE_URL = os.getenv("INSTANCE_URL")
 J_USERNAME = fernet.decrypt(os.getenv("J_USERNAME")).decode(
