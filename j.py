@@ -13,6 +13,7 @@ from selenium.common.exceptions import *
 # constant
 timer = 2
 config = os.path.join(os.getcwd(), ".env")
+# config = 'dist/.env'
 if os.path.isfile(config):
     load_dotenv(config)
 else:
@@ -59,7 +60,7 @@ else:
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options=chrome_options)
-wait = WebDriverWait(driver, 10)
+wait = WebDriverWait(driver, 60)
 if not DEBUG:
     driver.get(INSTANCE_URL)
 if DEBUG:
@@ -154,6 +155,7 @@ def log(msg):
 
 def wakeup():
     print("--------- START WAKEUP PROCESS")
+    
     # waiting redirect to dev page
     wait.until(EC.url_to_be(
         "https://developer.servicenow.com/dev.do#!/home?wu=true"))
@@ -170,6 +172,7 @@ def wakeup():
         "https://signon.service-now.com/x_snc_sso_auth.do?pageId=username"))
     wait.until(EC.presence_of_all_elements_located((By.ID, "email")))
     log("LOGIN page loaded!")
+
     # Fulfilment authenticate
     log("Get Email field")
     ele = driver.find_element(By.ID, "email")
@@ -177,16 +180,17 @@ def wakeup():
     log("Enter Email")
     ele.send_keys(A_USERNAME)
     ele = driver.find_element(By.ID, "username_submit_button")
+    time.sleep(timer)
     ele.click()
     log("Go to next step")
     wait.until(EC.presence_of_all_elements_located((By.ID, "password")))
     log("Get Password field")
     ele = driver.find_element(By.ID, "password")
     ele.click()
-
     log("Enter Password")
     ele.send_keys(A_PASSWORD)
     ele = driver.find_element(By.ID, "password_submit_button")
+    time.sleep(timer)
     ele.click()
     log("Start Authenticate...")
     time.sleep(timer)
@@ -209,8 +213,8 @@ def main():
             wakeup()
         else:
             log("Instance still alive!")
-            if login():
-                action()
+        if login():
+            action()
     except Exception as e:
         print("------------------has been error")
         print(e)
