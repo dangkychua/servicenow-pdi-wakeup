@@ -12,8 +12,8 @@ from selenium.common.exceptions import *
 
 # constant
 timer = 2
-# config = os.path.join(os.getcwd(), ".env")
-config = 'dist/.env'
+config = os.path.join(os.getcwd(), ".env")
+# config = 'dist/.env'
 if os.path.isfile(config):
     load_dotenv(config)
 else:
