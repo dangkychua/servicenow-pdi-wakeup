@@ -11,7 +11,7 @@ from selenium.common.exceptions import *
 
 
 # constant
-timer = 2
+timer = 2  # seconds
 config = os.path.join(os.getcwd(), ".env")
 # config = 'dist/.env'
 if os.path.isfile(config):
@@ -61,6 +61,7 @@ else:
     chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options=chrome_options)
 wait = WebDriverWait(driver, 60)
+
 
 def login():
     print("--------- START LOGIN PROCESS")
@@ -176,7 +177,7 @@ def wakeup():
     log("Enter Email")
     ele.send_keys(A_USERNAME)
     ele = driver.find_element(By.ID, "username_submit_button")
-    time.sleep(timer)
+    # time.sleep(timer)
     ele.click()
     log("Go to next step")
     wait.until(EC.presence_of_all_elements_located((By.ID, "password")))
@@ -186,31 +187,37 @@ def wakeup():
     log("Enter Password")
     ele.send_keys(A_PASSWORD)
     ele = driver.find_element(By.ID, "password_submit_button")
-    time.sleep(timer)
+    # time.sleep(timer)
     ele.click()
     log("Start Authenticate...")
     time.sleep(timer)
 
     # Waiting instance wakeup
-    log("Waiting instance wakeup.....")
-    wait.until(EC.url_to_be(
-        "https://developer.servicenow.com/dev.do#!/home"))
-    time.sleep(timer)
-    ele = WebDriverWait(driver, 180).until(EC.element_to_be_clickable(driver.execute_script(
-        "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
-    log("instance has been wake up!!!")
-    return True
+    try:
+        wait.until(EC.url_to_be(
+            "https://developer.servicenow.com/dev.do#!/home"))
+        log("Waiting instance wakeup.....")
+        time.sleep(timer * 5)
+        ele = WebDriverWait(driver, 180).until(EC.visibility_of(driver.execute_script(
+            "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
+        log("instance has been wake up!!!")
+        return True
+    except Exception:
+        log("WAKEUP PROCESS has been failed!")
+        log("Please retry after 2 minutes.")
+        return False
 
 
 def main():
     try:
+        isWakeUpSuccessful = True
         driver.get(INSTANCE_URL)
         if driver.title == "Instance Hibernating page":
             log("Instance has been hibernated!")
-            wakeup()
+            isWakeUpSuccessful = wakeup()
         else:
             log("Instance still alive!")
-        if login():
+        if isWakeUpSuccessful and login():
             action()
     except Exception as e:
         print("------------------has been error")
