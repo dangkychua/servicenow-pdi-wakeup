@@ -13,7 +13,6 @@ from selenium.common.exceptions import *
 # constant
 timer = 2  # seconds
 config = os.path.join(os.getcwd(), ".env")
-# config = 'dist/.env'
 if os.path.isfile(config):
     load_dotenv(config)
 else:
@@ -23,12 +22,15 @@ else:
         time.sleep(1)
     sys.exit(0)
 
+# DEBUG
+DEBUG = False
+DEV_URL = "https://developer.servicenow.com/dev.do#!/home?wu=true"
 
 CALU = os.getenv("CALU") == "True"
 SILENT = os.getenv("SILENT") == "True"
 key = os.getenv("K", Fernet.generate_key().decode())
 fernet = Fernet(key.encode())
-DEBUG = False
+
 INSTANCE_URL = os.getenv("INSTANCE_URL")
 J_USERNAME = fernet.decrypt(os.getenv("J_USERNAME")).decode(
 ) if CALU else os.getenv("J_USERNAME")
@@ -39,15 +41,15 @@ A_USERNAME = fernet.decrypt(os.getenv("A_USERNAME")).decode(
 A_PASSWORD = fernet.decrypt(os.getenv("A_PASSWORD")).decode(
 ) if CALU else os.getenv("A_PASSWORD")
 
-if DEBUG:
-    print(CALU)
-    print("-----------------------------")
-    print(f"SLIENT MODE: {SILENT}")
-    print(f"INSTANCE URL: {INSTANCE_URL}")
-    print(f"J_USERNAME: {J_USERNAME}")
-    print(f"J_PASSWORD: {J_PASSWORD}")
-    print(f"A_USERNAME: {A_USERNAME}")
-    print(f"A_PASSWORD: {A_PASSWORD}")
+# if DEBUG:
+#     print(CALU)
+#     print("-----------------------------")
+#     print(f"SLIENT MODE: {SILENT}")
+#     print(f"INSTANCE URL: {INSTANCE_URL}")
+#     print(f"J_USERNAME: {J_USERNAME}")
+#     print(f"J_PASSWORD: {J_PASSWORD}")
+#     print(f"A_USERNAME: {A_USERNAME}")
+#     print(f"A_PASSWORD: {A_PASSWORD}")
 
 # init
 chrome_options = webdriver.ChromeOptions()
@@ -151,6 +153,7 @@ def log(msg):
 
 
 def wakeup():
+
     print("--------- START WAKEUP PROCESS")
 
     # waiting redirect to dev page
@@ -197,15 +200,24 @@ def wakeup():
         wait.until(EC.url_to_be(
             "https://developer.servicenow.com/dev.do#!/home"))
         log("Waiting instance wakeup.....")
-        time.sleep(timer * 5)
-        ele = WebDriverWait(driver, 180).until(EC.visibility_of(driver.execute_script(
+        time.sleep(timer)
+        ele = wait.until(EC.visibility_of(driver.execute_script(
             "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
+
+        WebDriverWait(driver, 180).until(
+            lambda d: 'is-disabled' not in ele.get_attribute('class'))
+
         log("instance has been wake up!!!")
         return True
-    except Exception:
+    except AttributeError:
+        log("instance has been wake up!!!")
+        return True
+
+    except Exception as e:
         log("WAKEUP PROCESS has been failed!")
         log("Please retry after 2 minutes.")
-        return False
+
+    return False
 
 
 def main():
@@ -233,3 +245,7 @@ def main():
 if __name__ == "__main__":
     if not DEBUG:
         main()
+    else:
+        driver.get(DEV_URL)
+        wakeup()
+        driver.close()
