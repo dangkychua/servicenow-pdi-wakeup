@@ -18,3 +18,6 @@
 /.venv/
 /build/
 /dist/
+action.json
+build.bat
+encrypt-action.py

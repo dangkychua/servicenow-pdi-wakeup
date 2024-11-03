@@ -1,3 +1,4 @@
+import json
 import time
 import os
 import sys
@@ -9,9 +10,9 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import *
 
-
-# constant
-timer = 2  # seconds
+# region ***CONSTANT
+DEBUG = False
+TIMER = 2  # seconds
 config = os.path.join(os.getcwd(), ".env")
 if os.path.isfile(config):
     load_dotenv(config)
@@ -22,15 +23,12 @@ else:
         time.sleep(1)
     sys.exit(0)
 
-# DEBUG
-DEBUG = False
 DEV_URL = "https://developer.servicenow.com/dev.do#!/home?wu=true"
-
 CALU = os.getenv("CALU") == "True"
 SILENT = os.getenv("SILENT") == "True"
 key = os.getenv("K", Fernet.generate_key().decode())
 fernet = Fernet(key.encode())
-
+ENC = "utf-8"
 INSTANCE_URL = os.getenv("INSTANCE_URL")
 J_USERNAME = fernet.decrypt(os.getenv("J_USERNAME")).decode(
 ) if CALU else os.getenv("J_USERNAME")
@@ -41,17 +39,16 @@ A_USERNAME = fernet.decrypt(os.getenv("A_USERNAME")).decode(
 A_PASSWORD = fernet.decrypt(os.getenv("A_PASSWORD")).decode(
 ) if CALU else os.getenv("A_PASSWORD")
 
-# if DEBUG:
-#     print(CALU)
-#     print("-----------------------------")
-#     print(f"SLIENT MODE: {SILENT}")
-#     print(f"INSTANCE URL: {INSTANCE_URL}")
-#     print(f"J_USERNAME: {J_USERNAME}")
-#     print(f"J_PASSWORD: {J_PASSWORD}")
-#     print(f"A_USERNAME: {A_USERNAME}")
-#     print(f"A_PASSWORD: {A_PASSWORD}")
+# LOAD PATTERNs
+__PATTERN = None
+if os.path.isfile("pattern.jl"):
+    with open('pattern.jl', 'r', encoding=ENC) as file:
+        data = file.read()
+        __PATTERN = json.loads(fernet.decrypt(data.encode(ENC)).decode(ENC))
 
-# init
+# endregion
+
+# region ***INIT
 chrome_options = webdriver.ChromeOptions()
 chrome_options.add_argument("--incognito")
 if SILENT:
@@ -63,19 +60,26 @@ else:
     chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options=chrome_options)
 wait = WebDriverWait(driver, 60)
+# endregion
+
+# region ****FUNCs
+
+
+def log(msg):
+    print(">>> ", msg)
 
 
 def login():
     print("--------- START LOGIN PROCESS")
     log("Start Authenticate...")
-    time.sleep(timer)
+    time.sleep(TIMER)
     username_field = driver.find_element(By.ID, "user_name")
     password_field = driver.find_element(By.ID, "user_password")
     submit_btn = driver.find_element(By.ID, "sysverb_login")
     username_field.send_keys(J_USERNAME)
     password_field.send_keys(J_PASSWORD)
     submit_btn.click()
-    time.sleep(timer)
+    time.sleep(TIMER)
     try:
         ele = WebDriverWait(driver, 5).until(EC.presence_of_element_located(
             (By.XPATH, "//*[@id='output_messages']/div/div/div")))
@@ -94,49 +98,41 @@ def login():
 
 def action():
     print("--------- START ACTION PROCESS")
-    log("Find Script-background menu")
-    time.sleep(timer)
-    ele = wait.until(EC.visibility_of(driver.execute_script(
-        "return document.querySelector('body > macroponent-f51912f4c700201072b211d4d8c26010').shadowRoot.querySelector('div > sn-canvas-appshell-root > sn-canvas-appshell-layout > sn-polaris-layout').shadowRoot.querySelector('div.sn-polaris-layout.polaris-enabled > div.layout-main > div.header-bar > sn-polaris-header').shadowRoot.querySelector('#d6e462a5c3533010cbd77096e940dd8c');")))
-    ele.click()
-    time.sleep(timer)
-    # check admin role
-    try:
-        ele = wait.until(EC.visibility_of(driver.execute_script(
-            "return document.querySelector('body > macroponent-f51912f4c700201072b211d4d8c26010').shadowRoot.querySelector('div > sn-canvas-appshell-root > sn-canvas-appshell-layout > sn-polaris-layout').shadowRoot.querySelector('div.sn-polaris-layout.polaris-enabled > div.layout-main > div.header-bar > sn-polaris-header').shadowRoot.querySelector('nav > div > sn-polaris-menu:nth-child(1)').shadowRoot.querySelector('#filter');")))
-        ele.click()
-        ele.send_keys("Scripts - Background")
-        time.sleep(timer)
-        wait.until(EC.visibility_of(driver.execute_script(
-            "return document.querySelector('body > macroponent-f51912f4c700201072b211d4d8c26010').shadowRoot.querySelector('div > sn-canvas-appshell-root > sn-canvas-appshell-layout > sn-polaris-layout').shadowRoot.querySelector('div.sn-polaris-layout.polaris-enabled > div.layout-main > div.header-bar > sn-polaris-header').shadowRoot.querySelector('nav > div > sn-polaris-menu:nth-child(1)').shadowRoot.querySelector('nav > div.sn-polaris-nav.d6e462a5c3533010cbd77096e940dd8c.can-animate > div.super-filter-container.all-results-open > div.all-results-section.section-open.results-section > div > div.sn-polaris-tab-content.-left.is-visible.can-animate > div > sn-collapsible-list').shadowRoot.querySelector('a[data-id=\"5e24af15c0a80a940121f06c64cf5982\"] > span > span.label > mark');")))
+    log("Check admin role")
+    wait.until(EC.url_contains(INSTANCE_URL +
+               "/now/nav/ui/classic/params/target/ui_page.do"))
+    time.sleep(TIMER)
+    ele = driver.execute_script(
+        "return window.frames[0].g_user.roles.indexOf('admin') > -1")
 
-    except Exception:
+    if not ele:
         log("User has not admin role")
         return False
-
+    log("User has admin role")
+    log("Access to Scripts - Background page....")
     driver.get(
         INSTANCE_URL+"/now/nav/ui/classic/params/target/sys.scripts.modern.do")
     log("Waiting navigate to Scripts - Background page....")
     wait.until(EC.url_to_be(
         INSTANCE_URL+"/now/nav/ui/classic/params/target/sys.scripts.modern.do"))
-    time.sleep(timer)
+    time.sleep(TIMER)
     WebDriverWait(driver, 60).until(EC.frame_to_be_available_and_switch_to_it(driver.execute_script(
         "return document.querySelector('body > macroponent-f51912f4c700201072b211d4d8c26010').shadowRoot.querySelector('#gsft_main');")))
     log("Scripts - Background page Loaded!")
     try:
-        time.sleep(timer)
+        time.sleep(TIMER)
         driver.execute_script(
             "changeJsEditorPreference_script_editor('false');")
         wait.until(EC.alert_is_present())
         driver.switch_to.alert.accept()
     except Exception:
         pass
-    time.sleep(timer)
+    time.sleep(TIMER)
     driver.execute_script(
         "document.querySelector('#script').value = 'gs.info(gs.now());'")
     driver.execute_script("document.querySelector('#MANDATORY').click();")
     log("Executing script....")
-    time.sleep(timer)
+    time.sleep(TIMER)
     wait.until(EC.url_to_be(
         INSTANCE_URL+"/now/nav/ui/classic/params/target/sys.scripts.do"))
     # time.sleep(timer)
@@ -144,16 +140,10 @@ def action():
         "return document.querySelector('body > pre').innerText;")
     log(ele)
     log("Execute script successful!")
-
     return True
 
 
-def log(msg):
-    print(">>> ", msg)
-
-
 def wakeup():
-
     print("--------- START WAKEUP PROCESS")
 
     # waiting redirect to dev page
@@ -193,19 +183,20 @@ def wakeup():
     # time.sleep(timer)
     ele.click()
     log("Start Authenticate...")
-    time.sleep(timer)
+    time.sleep(TIMER)
 
     # Waiting instance wakeup
     try:
         wait.until(EC.url_to_be(
             "https://developer.servicenow.com/dev.do#!/home"))
         log("Waiting instance wakeup.....")
-        time.sleep(timer)
+        time.sleep(TIMER)
         ele = wait.until(EC.visibility_of(driver.execute_script(
             "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
 
-        WebDriverWait(driver, 180).until(
-            lambda d: 'is-disabled' not in ele.get_attribute('class'))
+
+        WebDriverWait(driver, 180).until(EC.element_to_be_clickable(driver.execute_script(
+            "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
 
         log("instance has been wake up!!!")
         return True
@@ -216,8 +207,13 @@ def wakeup():
     except Exception as e:
         log("WAKEUP PROCESS has been failed!")
         log("Please retry after 2 minutes.")
+        print(e)
 
     return False
+
+# endregion
+
+# region ****MAIN
 
 
 def main():
@@ -249,3 +245,5 @@ if __name__ == "__main__":
         driver.get(DEV_URL)
         wakeup()
         driver.close()
+
+# endregion
