@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import *
 
 # region ***CONSTANT
-DEBUG = True
+DEBUG = False
 TIMER = 2  # seconds
 config = os.path.join(os.getcwd(), ".env")
 if os.path.isfile(config):
