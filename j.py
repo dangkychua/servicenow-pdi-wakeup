@@ -11,7 +11,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import *
 
 # region ***CONSTANT
-DEBUG = False
+DEBUG = True
 TIMER = 2  # seconds
 config = os.path.join(os.getcwd(), ".env")
 if os.path.isfile(config):
@@ -187,22 +187,20 @@ def wakeup():
 
     # Waiting instance wakeup
     try:
-        wait.until(EC.url_to_be(
-            "https://developer.servicenow.com/dev.do#!/home"))
+        log("Waiting DEV page loaded.....")
+        wait.until(EC.url_to_be("https://developer.servicenow.com/dev.do"))
         log("Waiting instance wakeup.....")
-        time.sleep(TIMER)
-        ele = wait.until(EC.visibility_of(driver.execute_script(
-            "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
+        __retry = 0
+        while __retry < 5:  # 3min
+            time.sleep(45)
+            driver.get(INSTANCE_URL)
+            if driver.title.startswith("Log in"):
+                log("Instance has been wake up!!!")
+                return True
+            __retry = __retry + 1
 
-
-        WebDriverWait(driver, 180).until(EC.element_to_be_clickable(driver.execute_script(
-            "return document.querySelector('body > dps-app').shadowRoot.querySelector('div > main > dps-home-auth-quebec').shadowRoot.querySelector('div > section:nth-child(1) > div > dps-page-header > div:nth-child(1) > button');")))
-
-        log("instance has been wake up!!!")
-        return True
-    except AttributeError:
-        log("instance has been wake up!!!")
-        return True
+        log("WAKEUP PROCESS has been failed!")
+        log("Please retry after 2 minutes.")
 
     except Exception as e:
         log("WAKEUP PROCESS has been failed!")
