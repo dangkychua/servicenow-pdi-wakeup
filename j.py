@@ -59,6 +59,8 @@ else:
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_experimental_option("detach", True)
 driver = webdriver.Chrome(options=chrome_options)
+driver.set_page_load_timeout(60)
+
 wait = WebDriverWait(driver, 60)
 # endregion
 
@@ -190,22 +192,31 @@ def wakeup():
         log("Waiting DEV page loaded.....")
         wait.until(EC.url_to_be("https://developer.servicenow.com/dev.do"))
         log("Waiting instance wakeup.....")
-        __retry = 0
-        while __retry < 5:  # 3min
-            time.sleep(45)
-            driver.get(INSTANCE_URL)
-            if driver.title.startswith("Log in"):
-                log("Instance has been wake up!!!")
-                return True
-            __retry = __retry + 1
+        __retry = 1
+        __retryMax = 5
 
-        log("WAKEUP PROCESS has been failed!")
-        log("Please retry after 2 minutes.")
+        while __retry <= __retryMax:  # 3min
+
+            for i in range(45, -1, -1):
+                print(f"[{__retry}/{__retryMax}] Waiting {i} seconds....",
+                      end="\r", flush=True)
+                time.sleep(1)
+
+            try:
+                driver.get(INSTANCE_URL)
+                if driver.title.startswith("Log in"):
+                    log("Instance has been wake up!!!")
+                    return True
+            except Exception:
+                pass
+
+            __retry += 1
 
     except Exception as e:
-        log("WAKEUP PROCESS has been failed!")
-        log("Please retry after 2 minutes.")
         print(e)
+
+    log("WAKEUP PROCESS has been failed!")
+    log("Please retry after 2 minutes.")
 
     return False
 
